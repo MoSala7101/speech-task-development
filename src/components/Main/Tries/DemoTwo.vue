@@ -53,6 +53,7 @@ export default {
             }
           );
           const data = await response.json();
+          console.log("data: ", data);
           this.transcription = data.results[0].alternatives[0].transcript;
         } catch (error) {
           console.error("Error transcribing speech:", error);
