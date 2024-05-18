@@ -33,7 +33,7 @@
       </button>
     </div>
 
-    <textarea
+    <!-- <textarea
       v-if="isFullScreen"
       class="response-area"
       name=""
@@ -41,7 +41,7 @@
       cols="30"
       rows="10"
       v-html="testResponse"
-    ></textarea>
+    ></textarea> -->
   </div>
 </template>
 
@@ -134,7 +134,7 @@ export default {
           console.log("transcription", transcription);
           if (transcription?.length) {
             this.testResponse = transcription;
-            this.transcriptions.push(transcription);
+            this.transcriptions.push({ text: transcription });
             this.$emit("update-messages", [...this.transcriptions]);
           }
         });
@@ -192,6 +192,7 @@ export default {
   margin: 0px auto 50px auto;
 }
 .ai-response {
+  min-width: 320px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background: rgba(0, 0, 0, 0.5);
