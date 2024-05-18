@@ -3,7 +3,10 @@
     class="speech-control-container"
     :class="{ 'full-screen': isFullScreen || isRecording }"
   >
-    <p v-if="isFullScreen" class="response ai-response">
+    <p
+      v-if="isFullScreen && showInitialMessageOnFullScreen"
+      class="response ai-response"
+    >
       {{ aiResponse }}
     </p>
     <p v-if="speechResponse" class="response speech-response">
@@ -52,7 +55,7 @@ import CloseIcon from "@/components/Icons/CloseIcon";
 import { getAudioTranscription } from "@/utils/GoogleAPIClient";
 
 export default {
-  props: ["isFullScreen"],
+  props: ["isFullScreen", "showInitialMessageOnFullScreen"],
   components: {
     MicIcon,
     StopIcon,

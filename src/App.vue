@@ -7,6 +7,7 @@
         :showHint="!messages.length && !isFullScreen"
       />
       <SpeechControlContainer
+        :showInitialMessageOnFullScreen="!messages.length"
         :isFullScreen="isFullScreen"
         @update-messages="updateMessages"
         @minimize-mic="minimizeMic"
