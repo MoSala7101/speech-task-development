@@ -71,7 +71,8 @@ export default {
         // Create the request body object
         const requestBody = {
           config: {
-            encoding: "LINEAR16",
+            encoding: "WEBM_OPUS",
+            // encoding: "LINEAR16",
             // sampleRateHertz: 16000,
             languageCode: "en-US",
           },
@@ -91,11 +92,11 @@ export default {
             body: JSON.stringify(requestBody),
           }
         )
-          // .then((response) => response.json())
+          .then((response) => response.json())
           .then((data) => {
-            // this.log("JSON: ", JSON.stringify(data));
+            this.log(JSON.stringify(data));
             // this.log("JSON: ", JSON.parse(JSON.stringify(data)));
-            this.log("Transcription:", data.json());
+            // this.log(data);
 
             let t = "no transcription yet";
             if (data?.results?.length) {
