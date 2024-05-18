@@ -130,13 +130,14 @@ export default {
       reader.onloadend = async () => {
         const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
 
-        let transcription = await getAudioTranscription(base64Data);
-        console.log("transcription", transcription);
-        if (transcription?.length) {
-          this.testResponse = transcription;
-          this.transcriptions.push(transcription);
-          this.$emit("update-messages", [...this.transcriptions]);
-        }
+        getAudioTranscription(base64Data).then((transcription) => {
+          console.log("transcription", transcription);
+          if (transcription?.length) {
+            this.testResponse = transcription;
+            this.transcriptions.push(transcription);
+            this.$emit("update-messages", [...this.transcriptions]);
+          }
+        });
       };
 
       reader.readAsDataURL(audioBlob); // Read audio Blob as data URL
