@@ -60,7 +60,7 @@ export default {
   },
 
   async mounted() {
-    await this.initRecorder();
+    // await this.initRecorder();
   },
   data() {
     return {
@@ -73,14 +73,15 @@ export default {
       mediaRecorder: null,
       audioChunks: [],
       transcriptions: [],
+      stream: null,
       // replay: "For Testing Only",
     };
   },
 
   methods: {
     async initRecorder() {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.mediaRecorder = new MediaRecorder(stream);
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(this.stream);
 
       this.mediaRecorder.ondataavailable = (event) => {
         this.audioChunks.push(event.data);
@@ -88,10 +89,17 @@ export default {
 
       this.mediaRecorder.onstop = () => {
         console.log("Stopping mediaRecorder");
+        this.stream.getTracks().forEach((track) => track.stop());
+
+        // Set media stream to null or undefined
+        this.stream = null;
+
         this.sendDataToSpeechToTextAPI();
       };
     },
     async startRecording() {
+      await this.initRecorder();
+
       await this.mediaRecorder.start();
       this.isRecording = true;
       this.$emit("maximize-mic");
@@ -101,9 +109,7 @@ export default {
 
       await this.mediaRecorder.stop();
       this.isRecording = false;
-
     },
-    
 
     stopAndMinimize() {
       this.stopRecording();
@@ -124,7 +130,7 @@ export default {
       reader.onloadend = () => {
         const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
 
-        let transcription =  getAudioTranscription(base64Data);
+        let transcription = getAudioTranscription(base64Data);
         console.log("transcription", transcription);
         if (transcription?.length) {
           this.testResponse = transcription;

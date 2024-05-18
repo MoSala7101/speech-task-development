@@ -25,7 +25,7 @@ function getAudioTranscription(base64Data) {
     requestBody.audio.content = base64Data
     // update fetch options with request body
     fetchOptions.body = JSON.stringify(requestBody)
-    let transcript = ".."
+    let transcript = ""
     fetch(fetchUrl, fetchOptions)
         .then((response) => response.json())
         .then((data) => {
@@ -45,8 +45,7 @@ function excractText(data) {
             ?.map((result) => result.alternatives[0].transcript)
             .join("\n");
     }
-    console.log("t: ", t);
-    return "Hello"
+    return t
 }
 
 module.exports = { getAudioTranscription }
