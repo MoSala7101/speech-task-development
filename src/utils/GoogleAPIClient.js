@@ -1,5 +1,5 @@
 // "AIzaSyBRqLY7bt6x2U4ADcZhE-HvNsVEKghbO9U";
-const API_KEY = process.env.VUE_APP_API_KEY 
+const API_KEY = process.env.VUE_APP_API_KEY
 const fetchUrl = `https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}`
 
 const requestBody = {
@@ -25,20 +25,28 @@ function getAudioTranscription(base64Data) {
     requestBody.audio.content = base64Data
     // update fetch options with request body
     fetchOptions.body = JSON.stringify(requestBody)
+    let transcript = ".."
     fetch(fetchUrl, fetchOptions)
         .then((response) => response.json())
-        .then((data) => excractText(data))
+        .then((data) => {
+            transcript = excractText(data)
+            // return "Hi"
+        })
+        // .then((data) => excractText(data))
         .catch((error) => console.error("Error sending audio data:", error));
+
+    return transcript
 }
 
 function excractText(data) {
-    let t = ""
+    let t = data
     if (data?.results?.length) {
         t = data?.results
             ?.map((result) => result.alternatives[0].transcript)
             .join("\n");
     }
-    return t
+    console.log("t: ", t);
+    return "Hello"
 }
 
 module.exports = { getAudioTranscription }

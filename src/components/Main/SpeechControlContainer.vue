@@ -101,7 +101,9 @@ export default {
 
       await this.mediaRecorder.stop();
       this.isRecording = false;
+
     },
+    
 
     stopAndMinimize() {
       this.stopRecording();
@@ -122,7 +124,7 @@ export default {
       reader.onloadend = () => {
         const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
 
-        let transcription = getAudioTranscription(base64Data);
+        let transcription =  getAudioTranscription(base64Data);
         console.log("transcription", transcription);
         if (transcription?.length) {
           this.testResponse = transcription;
