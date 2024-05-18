@@ -1,6 +1,6 @@
 <template>
   <div class="message-item" :class="{ 'ai-message': message.sender == 'ai' }">
-    <span class="message-time">{{ message.timestamp }}</span>
+    <!-- <span class="message-time">{{ message.timestamp }}</span> -->
     <div class="message-text">{{ message.text }}</div>
   </div>
 </template>
@@ -15,8 +15,8 @@ export default {
 .message-item {
   width: 100%;
   margin: 5px 0;
-  border-radius: 5px;
-  padding: 18px 10px 5px 10px;
+  border-radius: 25px;
+  padding: 15px 30px 15px 30px;
   background-color: #111;
   color: #f0f0f0;
   width: fit-content;

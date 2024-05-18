@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-    <NavbarContainer />
+    <NavbarContainer @json-clicked="exportMessages" />
     <main class="container">
-      <!-- <DemoOne /> -->
-      <!-- <DemoTwo /> -->
-      <!-- <DemoThree /> -->
-      <!-- <DemoFour /> -->
-      <!-- <DemoFive /> -->
-      <!-- <DemoSix /> -->
-      <!-- <DemoSeven /> -->
-      <!-- <DemoEight /> -->
-      <MessagesList :messages="messages" />
-      <SpeechControlContainer :isFullScreen="!messages.length" />
+      <MessagesList
+        :messages="messages"
+        :showHint="!messages.length && !isFullScreen"
+      />
+      <SpeechControlContainer
+        :isFullScreen="isFullScreen"
+        @update-messages="updateMessages"
+        @minimize-mic="minimizeMic"
+        @maximize-mic="maximizeMic"
+      />
     </main>
   </div>
 </template>
@@ -19,14 +19,6 @@
 <script>
 import NavbarContainer from "@/components/Navbar/Container";
 import MessagesList from "@/components/Main/MessagesList";
-// import DemoOne from "@/components/Main/Tries/DemoOne";
-// import DemoTwo from "@/components/Main/Tries/DemoTwo";
-// import DemoThree from "@/components/Main/Tries/DemoThree";
-// import DemoFour from "@/components/Main/Tries/DemoFour";
-// import DemoFive from "@/components/Main/Tries/DemoFive";
-// import DemoSix from "@/components/Main/Tries/DemoSix";
-// import DemoSeven from "@/components/Main/Tries/DemoSeven";
-// import DemoEight from "@/components/Main/Tries/DemoEight";
 import SpeechControlContainer from "@/components/Main/SpeechControlContainer";
 
 export default {
@@ -34,20 +26,51 @@ export default {
   components: {
     NavbarContainer,
     MessagesList,
-    // DemoOne,
-    // DemoTwo,
-    // DemoThree,
-    // DemoFour,
-    // DemoFive,
-    // DemoSix,
-    // DemoSeven,
-    // DemoEight,
     SpeechControlContainer,
   },
   data() {
     return {
       messages: [],
+      isFullScreen: true,
     };
+  },
+  methods: {
+    updateMessages(messages) {
+      this.messages = [...messages];
+    },
+    minimizeMic() {
+      this.isFullScreen = false;
+    },
+    maximizeMic() {
+      this.isFullScreen = true;
+    },
+    exportMessages() {
+      try {
+        if (!this.messages.length) return;
+
+        let messagesObject = Object.assign(
+          {},
+          [...this.messages].map((m) => m.text)
+        );
+
+        const filename = "speech_messages.json";
+        const content = `data:text/json;charset=utf-8,${encodeURIComponent(
+          JSON.stringify(messagesObject)
+        )}`;
+        const link = document.createElement("a");
+
+        link.style.display = "none";
+        link.setAttribute("target", "_blank");
+        link.setAttribute("href", content);
+        link.setAttribute("download", filename);
+
+        document.body.appendChild(link);
+        link.click(); // Programmatically click the link to trigger the download
+        document.body.removeChild(link); // Remove the link from the document
+      } catch (error) {
+        console.log("exportMessages: ", this.messages);
+      }
+    },
   },
 };
 </script>
@@ -103,3 +126,4 @@ body {
   position: relative;
 }
 </style>
+

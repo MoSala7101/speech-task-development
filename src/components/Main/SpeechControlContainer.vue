@@ -3,7 +3,10 @@
     class="speech-control-container"
     :class="{ 'full-screen': isFullScreen || isRecording }"
   >
-    <p v-if="aiResponse" class="response ai-response">
+    <p
+      v-if="isFullScreen"
+      class="response ai-response"
+    >
       {{ aiResponse }}
     </p>
     <p v-if="speechResponse" class="response speech-response">
@@ -22,62 +25,31 @@
       >
         <StopIcon :fillColor="iconFillColor" />
       </button>
-    </div>
-    <div class="test-container" v-show="showResult">
-      <div class="audio-container">
-        <audio class="audio-player" ref="audioPlayer" controls></audio>
-      </div>
-      <textarea class="response-area" rows="10" v-html="replay"> </textarea>
+
+      <button
+        id="closeMic"
+        class="close-btn"
+        @click="stopAndMinimize"
+        v-if="isRecording"
+      >
+        <CloseIcon fillColor="red" />
+      </button>
     </div>
   </div>
 </template>
 
 <script>
-/**
-Task: 
-Implementing Free Google Speech-to-Text API in Vue.js with Plain JavaScript
-
-Description: 
---------------
-As a Senior Front-End Developer, your task is to integrate the free tier of 
-Google Speech-to-Text API into a Vue.js application using plain JavaScript.
-The objective is to create a feature that allows users to speak into their browser's
-microphone, transcribe the speech into text using the Google API,
-display the transcribed text on the screen, and export the text into a JSON file.
-
-Deliverables:
-----------------
-	A fully functional Vue.js application with the integrated 
-Google Speech-to-Text API feature using plain JavaScript of at least 10 spoken sentences.
-
-	Documentation:
-----------------------
-1) How did you develop the solution.
-2) The searches you made and any other relevant information 
-e.g. setup instructions, usage guidelines, etc.
-
-	The exported JSON file containing the transcribed text.
-
-Resources: 
------------------------
-	Google Cloud Speech-to-Text API Documentation: [Google Cloud Speech-to-Text Documentation]
-(https://cloud.google.com/speech-to-text/docs)
-
-	Vue.js Documentation: [Vue.js Documentation] (https://vuejs.org/v2/guide/)
-
-Deadline: 
-2 days from receiving the task.
-*/
-
 import MicIcon from "@/components/Icons/MicIcon";
 import StopIcon from "@/components/Icons/StopIcon";
+import CloseIcon from "@/components/Icons/CloseIcon";
+import { getAudioTranscription } from "@/utils/GoogleAPIClient";
 
-// import axios from "axios";
 export default {
   props: ["isFullScreen"],
   components: {
     MicIcon,
     StopIcon,
+    CloseIcon,
   },
 
   async mounted() {
@@ -86,16 +58,15 @@ export default {
   data() {
     return {
       isRecording: false,
-      showResult: false,
-      micFillColor: null,
+      // showResult: false,
+      micFillColor: "#111",
       aiResponse: "Hello! How can I help you?",
       speechResponse: "",
       recognizedText: "",
       mediaRecorder: null,
       audioChunks: [],
-      transcription: "",
-      replay: "For Testing Only",
-      API_KEY: "AIzaSyBRqLY7bt6x2U4ADcZhE-HvNsVEKghbO9U",
+      transcriptions: [],
+      // replay: "For Testing Only",
     };
   },
 
@@ -107,89 +78,64 @@ export default {
       this.mediaRecorder.ondataavailable = (event) => {
         this.audioChunks.push(event.data);
       };
+
+      this.mediaRecorder.onstop = () => {
+        console.log("Stopping mediaRecorder");
+        this.sendDataToSpeechToTextAPI();
+      };
     },
     async startRecording() {
-     await this.mediaRecorder.start();
+      await this.mediaRecorder.start();
       this.isRecording = true;
-      this.showResult = false;
+      this.$emit("maximize-mic");
     },
-    stopRecording() {
-      if (this.mediaRecorder) {
-        this.mediaRecorder.stop();
-        this.isRecording = false;
-        this.sendDataToSpeechToTextAPI();
-      }
+    async stopRecording() {
+      if (this.mediaRecorder.state !== "recording") return;
+
+      await this.mediaRecorder.stop();
+      this.isRecording = false;
     },
 
-    sendDataToSpeechToTextAPI() {
+    stopAndMinimize() {
+      this.stopRecording();
+      this.minimizeMic();
+    },
+
+    async sendDataToSpeechToTextAPI() {
       if (this.audioChunks.length === 0) {
         console.error("No audio data to send.");
         return;
       }
 
+      // let base64Data = getAudioBase64(this.audioChunks);
       // Convert audio chunks to a single Blob
       const audioBlob = new Blob(this.audioChunks, { type: "audio/wav" }); // Adjust type based on your audio format
-
       // Convert audio Blob to base64
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
 
-        // Create the request body object
-        const requestBody = {
-          config: {
-            encoding: "WEBM_OPUS",
-            // encoding: "LINEAR16",
-            // sampleRateHertz: 16000,
-            languageCode: "en-US",
-          },
-          audio: {
-            content: base64Data,
-          },
-        };
-
-        // Make HTTP request to the Google Speech-to-Text API using Fetch
-        fetch(
-          `https://speech.googleapis.com/v1/speech:recognize?key=${this.API_KEY}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json", // Use application/json for JSON request body
-            },
-            body: JSON.stringify(requestBody),
-          }
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            // this.log(JSON.stringify(data));
-            // this.log("JSON: ", JSON.parse(JSON.stringify(data)));
-            // this.log(data);
-
-            let t = "no transcription yet";
-            if (data?.results?.length) {
-              t = data?.results
-                ?.map((result) => result.alternatives[0].transcript)
-                .join("\n");
-
-              if (t.length) this.replay = t;
-              this.showResult = t;
-            }
-
-            // Clear audioChunks for the next recording
-            this.audioChunks = [];
-          })
-          .catch((error) => {
-            // Handle error
-            console.error("Error sending audio data:", error);
-          });
+        let transcription = getAudioTranscription(base64Data);
+        if (transcription?.length) {
+          // this.showResult = transcription;
+          this.transcriptions.push(transcription);
+          this.$emit("update-messages", [...this.transcriptions]);
+        }
       };
+
       reader.readAsDataURL(audioBlob); // Read audio Blob as data URL
+
+      // Clear audioChunks for the next recording
+      this.audioChunks = [];
+    },
+    minimizeMic() {
+      this.$emit("minimize-mic");
     },
   },
 
   computed: {
     iconFillColor() {
-      return this.isRecording ? "red" : "#222";
+      return this.isRecording ? "green" : "#222";
     },
   },
 };
@@ -202,7 +148,7 @@ export default {
   justify-content: center;
   align-items: center;
   height: var(--speech-control-container-height);
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
 }
 .speech-control-container.full-screen {
   height: 100%;
@@ -210,7 +156,7 @@ export default {
   position: absolute;
   bottom: 0;
   top: 0;
-  background: var(--primary-color);
+  /* background: var(--primary-color); */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -222,7 +168,7 @@ export default {
 }
 
 .response {
-  width: 80%;
+  width: 50%;
   text-align: center;
   font-size: 30px;
   padding: 10px;
@@ -231,7 +177,7 @@ export default {
 .ai-response {
   border-radius: 10px;
   border: 1px solid var(--border-color);
-  background: #111;
+  background: rgba(0, 0, 0, 0.5);
 }
 .speech-response {
   /* margin-bottom: 50px; */
@@ -241,6 +187,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   position: relative;
+  margin: 10px auto;
 }
 .mic-btn {
   width: 80px;
@@ -262,6 +209,20 @@ export default {
   border-radius: 50%;
   border: none;
   padding: 15px;
+  cursor: pointer;
+}
+
+.close-btn {
+  background: #000;
+  position: absolute;
+  right: -30px;
+  bottom: -80px;
+  width: 70px;
+  height: 70px;
+  margin-right: 20px;
+  border-radius: 50%;
+  border: none;
+  padding: 20px;
   cursor: pointer;
 }
 
@@ -295,4 +256,3 @@ export default {
   height: 100px;
 }
 </style>
-

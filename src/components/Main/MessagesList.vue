@@ -7,7 +7,7 @@
     />
   </div>
   <div class="messages-list hint-container" v-else>
-    <p class="hint">Hello! How can I help you ?</p>
+    <p v-show="showHint" class="hint">Hello! How can I help you ?</p>
   </div>
 </template>
   
@@ -18,7 +18,7 @@ export default {
   components: {
     MessageItem,
   },
-  props: ["messages"],
+  props: ["messages","showHint"],
 };
 </script>
 
