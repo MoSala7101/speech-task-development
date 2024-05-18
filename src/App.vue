@@ -9,9 +9,9 @@
       <!-- <DemoFive /> -->
       <!-- <DemoSix /> -->
       <!-- <DemoSeven /> -->
-      <DemoEight />
+      <!-- <DemoEight /> -->
       <MessagesList :messages="messages" />
-      <!-- <SpeechControlContainer :isFullScreen="!messages.length" /> -->
+      <SpeechControlContainer :isFullScreen="!messages.length" />
     </main>
   </div>
 </template>
@@ -26,8 +26,8 @@ import MessagesList from "@/components/Main/MessagesList";
 // import DemoFive from "@/components/Main/Tries/DemoFive";
 // import DemoSix from "@/components/Main/Tries/DemoSix";
 // import DemoSeven from "@/components/Main/Tries/DemoSeven";
-import DemoEight from "@/components/Main/Tries/DemoEight";
-// import SpeechControlContainer from "@/components/Main/SpeechControlContainer";
+// import DemoEight from "@/components/Main/Tries/DemoEight";
+import SpeechControlContainer from "@/components/Main/SpeechControlContainer";
 
 export default {
   name: "App",
@@ -41,8 +41,8 @@ export default {
     // DemoFive,
     // DemoSix,
     // DemoSeven,
-    DemoEight,
-    // SpeechControlContainer,
+    // DemoEight,
+    SpeechControlContainer,
   },
   data() {
     return {

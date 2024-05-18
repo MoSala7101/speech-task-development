@@ -23,7 +23,7 @@
         <StopIcon :fillColor="iconFillColor" />
       </button>
     </div>
-    <div class="test-container" v-show="showAudio">
+    <div class="test-container" v-show="showResult">
       <div class="audio-container">
         <audio class="audio-player" ref="audioPlayer" controls></audio>
       </div>
@@ -72,7 +72,7 @@ Deadline:
 import MicIcon from "@/components/Icons/MicIcon";
 import StopIcon from "@/components/Icons/StopIcon";
 
-import axios from "axios";
+// import axios from "axios";
 export default {
   props: ["isFullScreen"],
   components: {
@@ -80,10 +80,13 @@ export default {
     StopIcon,
   },
 
+  async mounted() {
+    await this.initRecorder();
+  },
   data() {
     return {
       isRecording: false,
-      showAudio: false,
+      showResult: false,
       micFillColor: null,
       aiResponse: "Hello! How can I help you?",
       speechResponse: "",
@@ -92,47 +95,95 @@ export default {
       audioChunks: [],
       transcription: "",
       replay: "For Testing Only",
+      API_KEY: "AIzaSyBRqLY7bt6x2U4ADcZhE-HvNsVEKghbO9U",
     };
   },
 
   methods: {
-    async startRecording() {
+    async initRecorder() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(stream);
 
       this.mediaRecorder.ondataavailable = (event) => {
         this.audioChunks.push(event.data);
       };
-
-      this.mediaRecorder.start();
+    },
+    async startRecording() {
+     await this.mediaRecorder.start();
       this.isRecording = true;
-      this.showAudio = false;
+      this.showResult = false;
     },
     stopRecording() {
-      this.mediaRecorder.stop();
-      this.mediaRecorder.onstop = this.handleStop;
-      this.isRecording = false;
-      this.showAudio = true;
-    },
-    async handleStop() {
-      const audioBlob = new Blob(this.audioChunks, { type: "audio/wav" });
-      this.audioChunks = [];
-
-      this.$refs.audioPlayer.src = URL.createObjectURL(audioBlob);
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "audio.wav");
-
-      try {
-        const response = await axios.post(
-          "https://speech.maronx.cloud/upload",
-          formData
-        );
-        const result = response.data;
-        this.replay = result;
-        this.transcription = result.transcription;
-      } catch (error) {
-        console.error("Error:", error);
+      if (this.mediaRecorder) {
+        this.mediaRecorder.stop();
+        this.isRecording = false;
+        this.sendDataToSpeechToTextAPI();
       }
+    },
+
+    sendDataToSpeechToTextAPI() {
+      if (this.audioChunks.length === 0) {
+        console.error("No audio data to send.");
+        return;
+      }
+
+      // Convert audio chunks to a single Blob
+      const audioBlob = new Blob(this.audioChunks, { type: "audio/wav" }); // Adjust type based on your audio format
+
+      // Convert audio Blob to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
+
+        // Create the request body object
+        const requestBody = {
+          config: {
+            encoding: "WEBM_OPUS",
+            // encoding: "LINEAR16",
+            // sampleRateHertz: 16000,
+            languageCode: "en-US",
+          },
+          audio: {
+            content: base64Data,
+          },
+        };
+
+        // Make HTTP request to the Google Speech-to-Text API using Fetch
+        fetch(
+          `https://speech.googleapis.com/v1/speech:recognize?key=${this.API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json", // Use application/json for JSON request body
+            },
+            body: JSON.stringify(requestBody),
+          }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            // this.log(JSON.stringify(data));
+            // this.log("JSON: ", JSON.parse(JSON.stringify(data)));
+            // this.log(data);
+
+            let t = "no transcription yet";
+            if (data?.results?.length) {
+              t = data?.results
+                ?.map((result) => result.alternatives[0].transcript)
+                .join("\n");
+
+              if (t.length) this.replay = t;
+              this.showResult = t;
+            }
+
+            // Clear audioChunks for the next recording
+            this.audioChunks = [];
+          })
+          .catch((error) => {
+            // Handle error
+            console.error("Error sending audio data:", error);
+          });
+      };
+      reader.readAsDataURL(audioBlob); // Read audio Blob as data URL
     },
   },
 
@@ -163,8 +214,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: 50px;;
-
+  padding-top: 50px;
 }
 .speech-control-container.full-screen .mic-btn {
   width: 200px;
