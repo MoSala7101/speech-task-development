@@ -29,8 +29,12 @@ function getAudioTranscription(base64Data) {
     fetch(fetchUrl, fetchOptions)
         .then((response) => response.json())
         .then((data) => {
-            transcript = excractText(data)
-            // return "Hi"
+            if (data?.results?.length) {
+                transcript = data?.results
+                    ?.map((result) => result.alternatives[0].transcript)
+                    .join("\n");
+            }
+
         })
         // .then((data) => excractText(data))
         .catch((error) => console.error("Error sending audio data:", error));
@@ -38,14 +42,14 @@ function getAudioTranscription(base64Data) {
     return transcript
 }
 
-function excractText(data) {
-    let t = data
-    if (data?.results?.length) {
-        t = data?.results
-            ?.map((result) => result.alternatives[0].transcript)
-            .join("\n");
-    }
-    return t
-}
+// function excractText(data) {
+//     let t = data
+//     if (data?.results?.length) {
+//         t = data?.results
+//             ?.map((result) => result.alternatives[0].transcript)
+//             .join("\n");
+//     }
+//     return t
+// }
 
 module.exports = { getAudioTranscription }
