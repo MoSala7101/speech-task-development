@@ -116,7 +116,7 @@ body {
   align-items: center;
   background-color: var(--primary-color);
   color: #f9f9f9;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 

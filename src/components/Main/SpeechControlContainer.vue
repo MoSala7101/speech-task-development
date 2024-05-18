@@ -3,10 +3,7 @@
     class="speech-control-container"
     :class="{ 'full-screen': isFullScreen || isRecording }"
   >
-    <p
-      v-if="isFullScreen"
-      class="response ai-response"
-    >
+    <p v-if="isFullScreen" class="response ai-response">
       {{ aiResponse }}
     </p>
     <p v-if="speechResponse" class="response speech-response">
@@ -35,6 +32,16 @@
         <CloseIcon fillColor="red" />
       </button>
     </div>
+
+    <textarea
+      v-if="isFullScreen"
+      class="response-area"
+      name=""
+      id=""
+      cols="30"
+      rows="10"
+      v-html="testResponse"
+    ></textarea>
   </div>
 </template>
 
@@ -58,7 +65,7 @@ export default {
   data() {
     return {
       isRecording: false,
-      // showResult: false,
+      testResponse: "..",
       micFillColor: "#111",
       aiResponse: "Hello! How can I help you?",
       speechResponse: "",
@@ -116,8 +123,9 @@ export default {
         const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
 
         let transcription = getAudioTranscription(base64Data);
+        console.log("transcription", transcription);
         if (transcription?.length) {
-          // this.showResult = transcription;
+          this.testResponse = transcription;
           this.transcriptions.push(transcription);
           this.$emit("update-messages", [...this.transcriptions]);
         }
