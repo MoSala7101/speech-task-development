@@ -127,10 +127,10 @@ export default {
       const audioBlob = new Blob(this.audioChunks, { type: "audio/wav" }); // Adjust type based on your audio format
       // Convert audio Blob to base64
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64Data = reader.result.split(",")[1]; // Extract base64 data (remove data URI prefix)
 
-        let transcription = getAudioTranscription(base64Data);
+        let transcription = await getAudioTranscription(base64Data);
         console.log("transcription", transcription);
         if (transcription?.length) {
           this.testResponse = transcription;
