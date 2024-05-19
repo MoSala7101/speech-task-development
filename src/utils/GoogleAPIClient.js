@@ -4,7 +4,7 @@ const fetchUrl = `https://speech.googleapis.com/v1/speech:recognize?key=${API_KE
 
 const requestBody = {
     config: {
-        encoding: "WEBM_OPUS",
+        encoding: "LINEAR16",
         languageCode: "en-US",
     },
     audio: {

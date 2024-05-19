@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@google-cloud/speech": "^3.6.0",
+    "audiobuffer-to-wav": "^1.0.0",
     "axios": "^1.6.8",
     "core-js": "^3.8.3",
     "opus-recorder": "^8.0.5",

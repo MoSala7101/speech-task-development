@@ -53,6 +53,7 @@ import MicIcon from "@/components/Icons/MicIcon";
 import StopIcon from "@/components/Icons/StopIcon";
 import CloseIcon from "@/components/Icons/CloseIcon";
 import { getAudioTranscription } from "@/utils/GoogleAPIClient";
+import {  blobToBase64 } from "@/utils/AudioEnconding";
 
 export default {
   props: ["isFullScreen", "showInitialMessageOnFullScreen"],
@@ -78,39 +79,54 @@ export default {
       transcriptions: [],
       stream: null,
       // replay: "For Testing Only",
+      recorder: null,
+      recordedAudio: null,
+      audioContext: null,
+      source: null,
     };
   },
 
   methods: {
     async initRecorder() {
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.mediaRecorder = new MediaRecorder(this.stream);
+      try {
+        this.stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        this.audioChunks.push(event.data);
-      };
+        this.audioContext = new AudioContext();
+        this.source = this.audioContext.createMediaStreamSource(this.stream);
+        this.recorder = new MediaRecorder(this.stream, {
+          mimeType: "audio/webm",
+        });
 
-      this.mediaRecorder.onstop = () => {
-        console.log("Stopping mediaRecorder");
-        this.stream.getTracks().forEach((track) => track.stop());
-
-        // Set media stream to null or undefined
-        this.stream = null;
-
-        this.sendDataToSpeechToTextAPI();
-      };
+        const chunks = [];
+        this.recorder.ondataavailable = (e) => chunks.push(e.data);
+        this.recorder.onstop = async () => {
+          const blob = new Blob(chunks, { type: "audio/webm" });
+          await blobToBase64(this.audioContext, blob).then((base64Data) => {
+            getAudioTranscription(base64Data).then((transcription) => {
+              if (transcription?.text?.length) {
+                console.log(transcription);
+                this.$emit("update-messages", transcription);
+              }
+            });
+          });
+        };
+      } catch (error) {
+        console.error("Error capturing audio:", error);
+      }
     },
     async startRecording() {
       await this.initRecorder();
 
-      await this.mediaRecorder.start();
+      this.recorder.start();
       this.isRecording = true;
       this.$emit("maximize-mic");
     },
     async stopRecording() {
-      if (this.mediaRecorder.state !== "recording") return;
-
-      await this.mediaRecorder.stop();
+      if (this.recorder) {
+        await this.recorder.stop();
+      }
       this.isRecording = false;
     },
 
@@ -119,35 +135,6 @@ export default {
       this.minimizeMic();
     },
 
-    async sendDataToSpeechToTextAPI() {
-      if (this.audioChunks.length === 0) {
-        console.error("No audio data to send.");
-        return;
-      }
-
-      // let base64Data = getAudioBase64(this.audioChunks);
-      // Convert audio chunks to a single Blob
-      const audioBlob = new Blob(this.audioChunks, { type: "audio/wav" }); // Adjust type based on your audio format
-      // Convert audio Blob to base64
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Data = reader.result.split(",")[1];
-
-        let transcription = await getAudioTranscription(base64Data);
-        if (transcription?.text?.length) {
-          this.testResponse = transcription.text;
-          if (transcription.sender === "client") {
-            this.transcriptions.push(transcription.text);
-          }
-          this.$emit("update-messages", { ...transcription });
-        }
-      };
-
-      reader.readAsDataURL(audioBlob); // Read audio Blob as data URL
-
-      // Clear audioChunks for the next recording
-      this.audioChunks = [];
-    },
     minimizeMic() {
       this.$emit("minimize-mic");
     },
