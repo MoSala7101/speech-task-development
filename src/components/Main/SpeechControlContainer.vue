@@ -35,16 +35,6 @@
         <CloseIcon fillColor="red" />
       </button>
     </div>
-
-    <!-- <textarea
-      v-if="isFullScreen"
-      class="response-area"
-      name=""
-      id=""
-      cols="30"
-      rows="10"
-      v-html="testResponse"
-    ></textarea> -->
   </div>
 </template>
 
@@ -53,7 +43,7 @@ import MicIcon from "@/components/Icons/MicIcon";
 import StopIcon from "@/components/Icons/StopIcon";
 import CloseIcon from "@/components/Icons/CloseIcon";
 import { getAudioTranscription } from "@/utils/GoogleAPIClient";
-import {  blobToBase64 } from "@/utils/AudioEnconding";
+import { blobToBase64 } from "@/utils/AudioEnconding";
 
 export default {
   props: ["isFullScreen", "showInitialMessageOnFullScreen"],
@@ -69,18 +59,12 @@ export default {
   data() {
     return {
       isRecording: false,
-      testResponse: "..",
       micFillColor: "#111",
       aiResponse: "Hello! How can I help you?",
       speechResponse: "",
-      recognizedText: "",
-      mediaRecorder: null,
-      audioChunks: [],
       transcriptions: [],
       stream: null,
-      // replay: "For Testing Only",
       recorder: null,
-      recordedAudio: null,
       audioContext: null,
       source: null,
     };
@@ -107,6 +91,7 @@ export default {
             getAudioTranscription(base64Data).then((transcription) => {
               if (transcription?.text?.length) {
                 console.log(transcription);
+                this.transcriptions.push(transcription.text);
                 this.$emit("update-messages", transcription);
               }
             });
@@ -124,9 +109,18 @@ export default {
       this.$emit("maximize-mic");
     },
     async stopRecording() {
-      if (this.recorder) {
-        await this.recorder.stop();
+      if (this.recorder && this.recorder.state !== "inactive") {
+        this.recorder.stop();
       }
+
+      if (this.stream) {
+        this.stream.getTracks().forEach((track) => track.stop());
+      }
+
+      if (this.audioContext) {
+        this.audioContext.close();
+      }
+
       this.isRecording = false;
     },
 
