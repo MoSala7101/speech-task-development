@@ -27,7 +27,7 @@ let audioEncoding = null
 let audioChannelCount = null
 let audioSampleRate = null
 let resendCount = 0
-const MAX_RESEND_COUNT = 6
+const MAX_RESEND_COUNT = 4
 
 let errorMessage = ""
 
@@ -43,8 +43,12 @@ const browserNotupportedMessage = { sender: "ai", text: 'Sorry, Your Browser Not
  */
 
 async function getAudioTranscription(base64Data) {
+
     resendCount += 1
-    if (resendCount >= MAX_RESEND_COUNT) return { ...browserNotupportedMessage }
+    if (resendCount >= MAX_RESEND_COUNT) {
+        resetResendVariables()
+        return { ...browserNotupportedMessage }
+    }
     try {
         let data = await getRequestReuslt(base64Data)
         errorMessage = data?.error?.message
@@ -52,25 +56,25 @@ async function getAudioTranscription(base64Data) {
             console.log(`Resend NO. ${resendCount} errorMessage: ${errorMessage}`);
             if (errorMessage.includes("encoding")) {
                 updateAudioEncoding(errorMessage)
-                getAudioTranscription(base64Data)
             }
             else if (errorMessage.includes("audio_channel_count")) {
                 updateAudioChannelCount(errorMessage)
-                getAudioTranscription(base64Data)
             }
 
             else if (errorMessage.includes("sample_rate") || errorMessage.includes("sample rate")) {
                 updateSampleRate(errorMessage)
-                getAudioTranscription(base64Data)
             }
-        } else {
-            let transcript = getMessageObject(data)
-            console.log("transcript from module: ", transcript);
-            return transcript
+            getAudioTranscription(base64Data)
         }
+        let transcript = getMessageObject(data)
+        console.log("transcript from module: ", transcript);
+
+        return transcript
+
     } catch (error) {
         console.error(error);
     }
+
 }
 
 /**
@@ -166,8 +170,11 @@ async function getRequestReuslt(base64Data) {
  * @returns {Object} transcription {sender , text}
  */
 function getMessageObject(data) {
-    let t = { ...browserNotupportedMessage }
-    if (data?.results?.length) {
+    let t = {}
+    if (errorMessage) {
+        t = { ...browserNotupportedMessage }
+    }
+    else if (data?.results?.length) {
         t.sender = "client"
         t.text = data?.results
             ?.map((result) => result.alternatives[0].transcript)
@@ -176,4 +183,4 @@ function getMessageObject(data) {
     return t
 }
 
-module.exports = { getAudioTranscription, resetResendVariables }
+module.exports = { getAudioTranscription }

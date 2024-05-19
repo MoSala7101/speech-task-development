@@ -52,10 +52,7 @@
 import MicIcon from "@/components/Icons/MicIcon";
 import StopIcon from "@/components/Icons/StopIcon";
 import CloseIcon from "@/components/Icons/CloseIcon";
-import {
-  getAudioTranscription,
-  resetResendVariables,
-} from "@/utils/GoogleAPIClient";
+import { getAudioTranscription } from "@/utils/GoogleAPIClient";
 
 export default {
   props: ["isFullScreen", "showInitialMessageOnFullScreen"],
@@ -134,17 +131,15 @@ export default {
       // Convert audio Blob to base64
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64Data = reader.result.split(",")[1]; 
+        const base64Data = reader.result.split(",")[1];
 
         let transcription = await getAudioTranscription(base64Data);
-        resetResendVariables();
-        console.log("transcription from component: ", transcription);
         if (transcription?.text?.length) {
           this.testResponse = transcription.text;
           if (transcription.sender === "client") {
             this.transcriptions.push(transcription.text);
           }
-          this.$emit("update-messages",{ ...transcription });
+          this.$emit("update-messages", { ...transcription });
         }
       };
 
