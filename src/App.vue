@@ -36,8 +36,9 @@ export default {
     };
   },
   methods: {
-    updateMessages(messages) {
-      this.messages = [...messages];
+    updateMessages(message) {
+      console.log("updateMessages new message: ", message);
+      this.messages.push(message);
     },
     minimizeMic() {
       this.isFullScreen = false;
