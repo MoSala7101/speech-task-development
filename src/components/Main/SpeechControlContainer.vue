@@ -43,7 +43,7 @@ import MicIcon from "@/components/Icons/MicIcon";
 import StopIcon from "@/components/Icons/StopIcon";
 import CloseIcon from "@/components/Icons/CloseIcon";
 import { getAudioTranscription } from "@/utils/GoogleAPIClient";
-import { blobToBase64 } from "@/utils/AudioEnconding";
+import { blobToBase64 } from "@/utils/AudioDataHandler";
 
 export default {
   props: ["isFullScreen", "showInitialMessageOnFullScreen"],
@@ -53,9 +53,6 @@ export default {
     CloseIcon,
   },
 
-  async mounted() {
-    // await this.initRecorder();
-  },
   data() {
     return {
       isRecording: false,
@@ -267,3 +264,4 @@ export default {
   height: 100px;
 }
 </style>
+@/utils/AudioDataHandler

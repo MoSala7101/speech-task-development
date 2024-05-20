@@ -1,7 +1,9 @@
 <template>
   <div class="navbar-container">
     <NavbarLogo />
-    <button class="json-btn" @click="JSONClicked">Export JSON</button>
+    <button class="json-btn" 
+    :disabled="!isCanExportSpeech"
+    @click="JSONClicked">Export JSON</button>
   </div>
 </template>
 
@@ -12,9 +14,9 @@ export default {
   components: {
     NavbarLogo,
   },
+  props: ['isCanExportSpeech'],
   methods: {
     JSONClicked() {
-      console.log("JSON CLICKED");
       this.$emit("json-clicked");
     },
   },
@@ -39,5 +41,13 @@ export default {
   border-radius: 5px;
   color: #f0f0f0;
   cursor: pointer;
+}
+
+.json-btn:disabled,
+.json-btn[disabled]{
+  border: 1px solid #888;
+  background-color: #444;
+  color: #ccc;
+  cursor: default;
 }
 </style>

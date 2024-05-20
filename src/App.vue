@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <NavbarContainer @json-clicked="exportMessages" />
+    <NavbarContainer 
+    :isCanExportSpeech="messages.length"
+    @json-clicked="exportMessages" />
     <main class="container">
       <MessagesList
         :messages="messages"
@@ -37,7 +39,6 @@ export default {
   },
   methods: {
     updateMessages(message) {
-      console.log("updateMessages new message: ", message);
       this.messages.push(message);
     },
     minimizeMic() {
