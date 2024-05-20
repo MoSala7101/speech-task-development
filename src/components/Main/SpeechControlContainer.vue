@@ -79,9 +79,12 @@ export default {
 
         this.audioContext = new AudioContext();
         this.source = this.audioContext.createMediaStreamSource(this.stream);
-        this.recorder = new MediaRecorder(this.stream, {
-          mimeType: "audio/webm",
-        });
+        let mimeType = "audio/webm";
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "audio/mp4";
+        }
+
+        this.recorder = new MediaRecorder(this.stream, { mimeType });
 
         const chunks = [];
         this.recorder.ondataavailable = (e) => chunks.push(e.data);
